@@ -1,77 +1,37 @@
-import React, { useState, useEffect } from "react";
-import {
-  StyleSheet,
-  SafeAreaView,
-  ScrollView,
-  View,
-  BackHandler,
-} from "react-native";
-import { Text, ListItem } from "react-native-elements";
-import Constants from "expo-constants";
-import { EXAMPLE_LIST } from "./example-list";
+import React, { useEffect } from "react";
+import { NavigationContainer } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import Login from "./components/Auth/Login";
+import * as SplashScreen from "expo-splash-screen";
+import HomeScreen from "./components/HomeScreen";
+import { enableScreens } from "react-native-screens";
+enableScreens();
+const Stack = createNativeStackNavigator();
+const USE_REACT_NAVIGATION = true;
 
 export default function App() {
-  const [exampleIndex, setExampleIndex] = useState(null);
-
-  // Handle when user press Hardware Back Button
   useEffect(() => {
-    const backAction = () => {
-      // Go back to Example List
-      if (exampleIndex !== null) {
-        setExampleIndex(null);
-      } 
-      // Exit app if user currently in Example List
-      else {
-        BackHandler.exitApp();
-      }
+    SplashScreen.preventAutoHideAsync();
 
-      return true;
-    };
-
-    // https://reactnative.dev/docs/backhandler
-    const backHandler = BackHandler.addEventListener(
-      "hardwareBackPress",
-      backAction
-    );
-
-    return () => backHandler.remove();
-  }, [exampleIndex]);
-
-  if (exampleIndex !== null) return EXAMPLE_LIST[exampleIndex].component;
+    setTimeout(async () => {
+      await SplashScreen.hideAsync();
+    }, 3000);
+  }, []);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Text h4 style={styles.heading}>
-        React Native Expo Examples
-      </Text>
-
-      <ScrollView>
-        {EXAMPLE_LIST.map((l, i) => (
-          <ListItem key={i} bottomDivider onPress={() => setExampleIndex(i)}>
-            <View>
-              <Text>Level {l.level}</Text>
-            </View>
-
-            <ListItem.Content>
-              <ListItem.Title style={styles.title}>{l.name}</ListItem.Title>
-            </ListItem.Content>
-          </ListItem>
-        ))}
-      </ScrollView>
-    </SafeAreaView>
+    <NavigationContainer>
+      <Stack.Navigator initialRouteName="Login">
+        <Stack.Screen
+          name="Login"
+          component={Login}
+          options={{ headerShown: false, gestureEnabled: false }}
+        />
+        <Stack.Screen
+          name="HomeScreen"
+          component={HomeScreen}
+          options={{ headerShown: false }}
+        />
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingTop: Constants.statusBarHeight,
-  },
-  heading: {
-    textAlign: "center",
-    padding: 12,
-  },
-  title: {
-    fontWeight: "bold",
-  },
-});

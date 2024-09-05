@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "react-native-expo-examples",
-    "slug": "react-native-expo-examples",
+    "name": "Gymee",
+    "slug": "gymee",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -22,6 +22,9 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "expo-router"
+    ]
   }
 }
