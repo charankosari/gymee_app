@@ -17,7 +17,7 @@ const LoginComponent = ({ navigation }) => {
   const [emailOrNumber, setEmailOrNumber] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const url = process.env.EXPO_PUBLIC_API_URL;
+  const url = "http://192.168.0.103:1337/api/gymee";
 
   useEffect(() => {
     const checkToken = async () => {
@@ -88,7 +88,7 @@ const LoginComponent = ({ navigation }) => {
   if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" color="#2BB673" />
+        <ActivityIndicator size="large" color="#fcd23e" />
       </View>
     );
   }
@@ -142,7 +142,8 @@ const LoginComponent = ({ navigation }) => {
           <TouchableOpacity
             onPress={handleLogin}
             style={{
-              backgroundColor: loading ? "#ccc" : "#2BB673",
+              backgroundColor: loading ? "#ccc" : "#fcd23e",
+
               paddingVertical: 12,
               paddingHorizontal: 12,
               borderRadius: 4,
@@ -155,9 +156,7 @@ const LoginComponent = ({ navigation }) => {
             {loading ? (
               <ActivityIndicator size="small" color="#ffffff" />
             ) : (
-              <Text
-                style={{ color: "#ffffff", fontSize: 16, fontWeight: "bold" }}
-              >
+              <Text style={{ color: "#000", fontSize: 16, fontWeight: "bold" }}>
                 Login
               </Text>
             )}
