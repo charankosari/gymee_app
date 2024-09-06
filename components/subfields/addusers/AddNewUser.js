@@ -4,24 +4,40 @@ import {
   Text,
   TextInput,
   StyleSheet,
+  ActivityIndicator,
   Alert,
   TouchableOpacity,
   KeyboardAvoidingView,
+  Keyboard,
+  Modal,
   Platform,
+  TouchableWithoutFeedback,
 } from "react-native";
-import moment from "moment";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-export default function AddNewUser() {
+import moment from "moment";
+import { RadioButton } from "react-native-paper";
+import DateTimePicker from "@react-native-community/datetimepicker";
+
+export default function AddNewUser({ navigation }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [number, setNumber] = useState("");
-  const [gender, setGender] = useState("");
+  const [gender, setGender] = useState("male");
   const [height, setHeight] = useState("");
   const [weight, setWeight] = useState("");
   const [subendsin, setSubendsin] = useState("");
   const [subscriptionStartDate, setSubscriptionStartDate] = useState(
-    moment().format("YYYY-MM-DD")
+    new Date()
   );
+  const [loading, setLoading] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+
+  const handleDateChange = (event, selectedDate) => {
+    const currentDate = selectedDate || subscriptionStartDate;
+    setShowDatePicker(Platform.OS === "ios");
+    setSubscriptionStartDate(currentDate);
+  };
 
   const handleSubmit = async () => {
     if (
@@ -37,48 +53,60 @@ export default function AddNewUser() {
       return;
     }
 
+    const formatDate = (date) => {
+      return moment(date).format("YYYY-MM-DD");
+    };
+
     const formattedHeight = `${parseInt(height)}cm`;
     const formattedWeight = `${parseInt(weight)}kg`;
+
     const userData = {
       name,
       email,
-      number,
+      number: parseInt(number),
       gender,
       height: formattedHeight,
       weight: formattedWeight,
       subendsin: parseInt(subendsin),
-      subscriptionStartDate,
+      subscriptionStartDate: formatDate(subscriptionStartDate),
     };
+
+    const jwtToken = await AsyncStorage.getItem("jwtToken");
+    setLoading(true);
 
     try {
       const response = await fetch(
-        "http://192.168.0.103/api/gymee/user/adduser",
+        "http://192.168.137.1:1337/api/gymee/user/adduser",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${jwtToken}`,
           },
           body: JSON.stringify(userData),
         }
       );
 
-      const result = await response.json();
-      if (response.ok) {
+      if (response.status === 201) {
         Alert.alert("Success", "User added successfully");
         setName("");
         setEmail("");
         setNumber("");
-        setGender("");
+        setGender("male");
         setHeight("");
         setWeight("");
         setSubendsin("");
-        setSubscriptionStartDate(moment().format("YYYY-MM-DD"));
+        setSubscriptionStartDate(new Date());
+        navigation.replace("HomeScreen");
       } else {
-        Alert.alert("Error", result.message || "Failed to add user");
+        const result = await response.json();
+        Alert.alert("Error", result.error || "Failed to add user");
       }
     } catch (error) {
       console.error("Error adding user:", error);
       Alert.alert("Error", "An error occurred while adding the user");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -87,104 +115,140 @@ export default function AddNewUser() {
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <View style={styles.card}>
-        <Text style={styles.title}>Add New User</Text>
-        <View style={styles.formRow}>
-          <Text style={styles.label}>Name:</Text>
-          <TextInput
-            style={styles.input}
-            value={name}
-            onChangeText={setName}
-            placeholder="Enter name"
-            placeholderTextColor="#999"
-          />
-        </View>
+      <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+        <View style={styles.card}>
+          <Text style={styles.title}>Add New User</Text>
+          <View style={styles.formRow}>
+            <Text style={styles.label}>Name:</Text>
+            <TextInput
+              style={styles.input}
+              value={name}
+              onChangeText={setName}
+              placeholder="Enter name"
+              placeholderTextColor="#999"
+            />
+          </View>
 
-        <View style={styles.formRow}>
-          <Text style={styles.label}>Gender:</Text>
-          <TextInput
-            style={styles.input}
-            value={gender}
-            onChangeText={setGender}
-            placeholder="Enter gender"
-            placeholderTextColor="#999"
-          />
-        </View>
+          <View style={styles.formRow}>
+            <Text style={styles.label}>Gender:</Text>
+            <View style={styles.radioGroup}>
+              <View style={styles.radioOutline}>
+                <RadioButton
+                  value="male"
+                  status={gender === "male" ? "checked" : "unchecked"}
+                  onPress={() => setGender("male")}
+                  color="#333"
+                />
+              </View>
+              <Text>Male</Text>
+              <View style={styles.radioOutline}>
+                <RadioButton
+                  value="female"
+                  status={gender === "female" ? "checked" : "unchecked"}
+                  onPress={() => setGender("female")}
+                  color="#333"
+                />
+              </View>
+              <Text>Female</Text>
+            </View>
+          </View>
 
-        <View style={styles.formRow}>
-          <Text style={styles.label}>Mobile No.:</Text>
-          <TextInput
-            style={styles.input}
-            value={number}
-            onChangeText={setNumber}
-            placeholder="Enter phone number"
-            placeholderTextColor="#999"
-            keyboardType="phone-pad"
-          />
-        </View>
+          <View style={styles.formRow}>
+            <Text style={styles.label}>Mobile No.:</Text>
+            <TextInput
+              style={styles.input}
+              value={number}
+              onChangeText={setNumber}
+              placeholder="Enter phone number"
+              placeholderTextColor="#999"
+              keyboardType="phone-pad"
+            />
+          </View>
 
-        <View style={styles.formRow}>
-          <Text style={styles.label}>Email:</Text>
-          <TextInput
-            style={styles.input}
-            value={email}
-            onChangeText={setEmail}
-            placeholder="Enter email"
-            placeholderTextColor="#999"
-            keyboardType="email-address"
-          />
-        </View>
+          <View style={styles.formRow}>
+            <Text style={styles.label}>Email:</Text>
+            <TextInput
+              style={styles.input}
+              value={email}
+              onChangeText={setEmail}
+              placeholder="Enter email"
+              placeholderTextColor="#999"
+              keyboardType="email-address"
+            />
+          </View>
 
-        <View style={styles.formRow}>
-          <Text style={styles.label}>Height (cm):</Text>
-          <TextInput
-            style={styles.input}
-            value={height}
-            onChangeText={setHeight}
-            placeholder="Enter height"
-            placeholderTextColor="#999"
-            keyboardType="numeric"
-          />
-        </View>
+          <View style={styles.formRow}>
+            <Text style={styles.label}>Height (cm):</Text>
+            <TextInput
+              style={styles.input}
+              value={height}
+              onChangeText={setHeight}
+              placeholder="Enter height"
+              placeholderTextColor="#999"
+              keyboardType="numeric"
+            />
+          </View>
 
-        <View style={styles.formRow}>
-          <Text style={styles.label}>Weight (kg):</Text>
-          <TextInput
-            style={styles.input}
-            value={weight}
-            onChangeText={setWeight}
-            placeholder="Enter weight"
-            placeholderTextColor="#999"
-            keyboardType="numeric"
-          />
-        </View>
+          <View style={styles.formRow}>
+            <Text style={styles.label}>Weight (kg):</Text>
+            <TextInput
+              style={styles.input}
+              value={weight}
+              onChangeText={setWeight}
+              placeholder="Enter weight"
+              placeholderTextColor="#999"
+              keyboardType="numeric"
+            />
+          </View>
 
-        <View style={styles.formRow}>
-          <Text style={styles.label}>Sub-Type:</Text>
-          <TextInput
-            style={styles.input}
-            value={subendsin}
-            onChangeText={setSubendsin}
-            placeholder="Enter subscription type"
-            placeholderTextColor="#999"
-          />
-        </View>
+          <View style={styles.formRow}>
+            <Text style={styles.label}>Sub Ends In (Days):</Text>
+            <TextInput
+              style={styles.input}
+              value={subendsin}
+              onChangeText={setSubendsin}
+              placeholder="Enter subscription duration in days"
+              placeholderTextColor="#999"
+              keyboardType="numeric"
+            />
+          </View>
 
-        <View style={styles.formRow}>
-          <Text style={styles.label}>Sub-Start Date:</Text>
-          <TextInput
-            style={styles.input}
-            value={subscriptionStartDate}
-            onChangeText={setSubscriptionStartDate}
-            placeholder="Enter subscription start date"
-            placeholderTextColor="#999"
-          />
-        </View>
+          <View style={styles.formRow}>
+            <Text style={styles.label}>Sub-Start Date:</Text>
+            <TouchableOpacity
+              style={styles.input}
+              onPress={() => setShowDatePicker(true)}
+            >
+              <Text style={{ color: "#333" }}>
+                {moment(subscriptionStartDate).format("YYYY-MM-DD")}
+              </Text>
+            </TouchableOpacity>
+          </View>
+          {showDatePicker && (
+            <DateTimePicker
+              value={subscriptionStartDate}
+              mode="date"
+              display="default"
+              onChange={handleDateChange}
+            />
+          )}
 
-        <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-          <Text style={styles.buttonText}>Add User</Text>
-        </TouchableOpacity>
-      </View>
+          <TouchableOpacity style={styles.button} onPress={handleSubmit}>
+            <Text style={styles.buttonText}>Add User</Text>
+          </TouchableOpacity>
+          <Modal
+            transparent={true}
+            visible={loading}
+            animationType="none"
+            onRequestClose={() => setLoading(false)}
+          >
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#000" />
+              <Text style={styles.loadingText}>Adding User...</Text>
+            </View>
+          </Modal>
+        </View>
+      </TouchableWithoutFeedback>
     </KeyboardAvoidingView>
   );
 }
@@ -193,11 +257,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    justifyContent: "center",
+    display: "flex",
     backgroundColor: "#fcd24f",
   },
   card: {
     backgroundColor: "#fcd23e",
+    marginTop: "20%",
     padding: 25,
     borderRadius: 15,
     shadowColor: "#000",
@@ -205,6 +270,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 5,
     elevation: 5,
+    justifyContent: "center",
   },
   title: {
     fontSize: 22,
@@ -242,12 +308,28 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     borderRadius: 10,
     alignItems: "center",
-    marginTop: 20,
-    elevation: 2,
   },
   buttonText: {
     color: "#fff",
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "bold",
+  },
+  radioGroup: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  radioOutline: {
+    marginHorizontal: 5,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
+  },
+  loadingText: {
+    color: "#000",
+    marginTop: 10,
+    fontSize: 16,
   },
 });
