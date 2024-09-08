@@ -14,7 +14,6 @@ import {
   TouchableWithoutFeedback,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
 import moment from "moment";
 import { RadioButton } from "react-native-paper";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -38,7 +37,6 @@ export default function AddNewUser({ navigation }) {
     setShowDatePicker(Platform.OS === "ios");
     setSubscriptionStartDate(currentDate);
   };
-
   const handleSubmit = async () => {
     if (
       !name ||
@@ -76,7 +74,7 @@ export default function AddNewUser({ navigation }) {
 
     try {
       const response = await fetch(
-        "http://192.168.137.1:1337/api/gymee/user/adduser",
+        "http://172.20.10.2:1337/api/gymee/user/adduser",
         {
           method: "POST",
           headers: {
@@ -97,7 +95,7 @@ export default function AddNewUser({ navigation }) {
         setWeight("");
         setSubendsin("");
         setSubscriptionStartDate(new Date());
-        navigation.replace("HomeScreen");
+        navigation.navigate("HomeScreen");
       } else {
         const result = await response.json();
         Alert.alert("Error", result.error || "Failed to add user");
@@ -158,7 +156,13 @@ export default function AddNewUser({ navigation }) {
             <TextInput
               style={styles.input}
               value={number}
-              onChangeText={setNumber}
+              onChangeText={(text) => {
+                let formattedNumber = text.replace(/\s+/g, "");
+                if (formattedNumber.startsWith("+91")) {
+                  formattedNumber = formattedNumber.slice(3);
+                }
+                setNumber(formattedNumber);
+              }}
               placeholder="Enter phone number"
               placeholderTextColor="#999"
               keyboardType="phone-pad"

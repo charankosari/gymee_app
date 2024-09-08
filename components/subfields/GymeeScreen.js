@@ -3,7 +3,13 @@ import React from "react";
 
 export default function GymeeScreen() {
   return (
-    <View>
+    <View
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+      }}
+    >
       <Text>GymeeScreen</Text>
     </View>
   );

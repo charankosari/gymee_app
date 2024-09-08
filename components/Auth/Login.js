@@ -17,7 +17,7 @@ const LoginComponent = ({ navigation }) => {
   const [emailOrNumber, setEmailOrNumber] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const url = "http://192.168.137.1:1337/api/gymee";
+  const url = "http://172.20.10.2:1337/api/gymee";
 
   useEffect(() => {
     const checkToken = async () => {
@@ -49,7 +49,7 @@ const LoginComponent = ({ navigation }) => {
   const handleLogin = async () => {
     setLoading(true);
     const isNumber = /^\d+$/.test(emailOrNumber);
-    const u = `http://192.168.137.1:1337/api/gymee/login`;
+    const u = `http://172.20.10.2:1337/api/gymee/login`;
 
     const body = isNumber
       ? { gymnumber: parseInt(emailOrNumber, 10), password }
