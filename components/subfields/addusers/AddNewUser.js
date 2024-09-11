@@ -74,7 +74,7 @@ export default function AddNewUser({ navigation }) {
 
     try {
       const response = await fetch(
-        "http://172.20.10.2:1337/api/gymee/user/adduser",
+        "http://192.168.0.103:1337/api/gymee/user/adduser",
         {
           method: "POST",
           headers: {
